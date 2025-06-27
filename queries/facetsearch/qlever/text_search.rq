@@ -58,19 +58,20 @@ values ?sosType {
 			#         ?geo a sschema:GeoShape .
 			#		 ?geo sschema:box ?box .}
             #     bind ( COALESCE(?box) As ?bbox)
-				 OPTIONAL {?subj schema:keywords|sschema:keywords ?kw1 .}
-            OPTIONAL {
-                ?subj schema:variableMeasured ?vm .
-                ?vm a schema:PropertyValue .
-                ?vm schema:name ?variableMeasured_a .
-            }
+				 OPTIONAL {?subj sschema:keywords|sschema:keywords ?kw1 .}
+#            OPTIONAL {
+#                ?subj sschema:variableMeasured ?vm .
+#                ?vm a sschema:PropertyValue .
+#                ?vm sschema:name ?variableMeasured_a .
+#            }
+				 # getting all names of variables. kills query
                  # if there is more than one location, then coallese to get the versions.
-             OPTIONAL {?subj schema:variableMeasured ?vm .
-               ?vm a  schema:PropertyValue  .
-               ?vm schema:name ?namedepth  .
+             OPTIONAL {?subj sschema:variableMeasured ?vm .
+               ?vm a  sschema:PropertyValue  .
+               ?vm sschema:name ?namedepth  .
                FILTER (?namedepth IN ("depth", "CmpDep") ) .
-                    ?vm schema:maxValue ?maxdepth_d .
-                  ?vm schema:minValue ?minDepth_d
+                    ?vm sschema:maxValue ?maxdepth_d .
+                  ?vm sschema:minValue ?minDepth_d
            }
              bind ( COALESCE(?maxdepth_d) As ?maxdepth)
             bind ( COALESCE(?minDepth_d) As ?minDepth)
