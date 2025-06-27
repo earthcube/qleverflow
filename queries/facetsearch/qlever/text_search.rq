@@ -79,7 +79,7 @@ values ?sosType {
              bind ( COALESCE(?kw1, "") As ?kwu)
             bind ( COALESCE(?url1, "") As ?url)
             # pick one date
-            bind ( COALESCE(?datec,?dateM,?datep1) As ?datep)
+            bind ( COALESCE(?datec,?datem,?datep1) As ?datep)
             BIND ( IF ( BOUND(?pub_name), ?pub_name, "No Publisher") as ?pubname ) .
             BIND ( IF ( BOUND(?place_name), ?place_name, "No Placenames") as ?placename ) .
         }
