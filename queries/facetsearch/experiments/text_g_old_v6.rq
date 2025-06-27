@@ -67,8 +67,7 @@ values ?sosType {
                  # if there is more than one location, then coallese to get the versions.
              OPTIONAL {?subj schema:variableMeasured ?vm .
                ?vm a  schema:PropertyValue  .
-               ?vm schema:name ?namedepth  .
-               FILTER (?namedepth IN ("depth", "CmpDep") ) .
+               ?vm schema:name "depth" .
                     ?vm schema:maxValue ?maxdepth_d .
                   ?vm schema:minValue ?minDepth_d
            }

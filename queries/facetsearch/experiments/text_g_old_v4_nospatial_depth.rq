@@ -7,8 +7,7 @@ SELECT distinct ?subj ?pubname (GROUP_CONCAT(DISTINCT ?placename; SEPARATOR=", "
         ?datep  (GROUP_CONCAT(DISTINCT ?url; SEPARATOR=", ") AS ?disurl)
 		(COUNT(?text) AS ?score) (SAMPLE(?text) AS ?example_text)
         ?name ?description (GROUP_CONCAT(DISTINCT ?resourceType_u; SEPARATOR=", ") as ?resourceType )  ?type ?g   (MAX(?lat) as ?maxlat) (Min(?lat) as ?minlat) (MAX(?lon) as ?maxlon) (Min(?lon) as ?minlon)
- ?maxdepth ?minDepth ?temporalCoverage (GROUP_CONCAT(DISTINCT ?variableMeasured_a; SEPARATOR=", ") as ?variableMeasured  )
- ?bbox
+ ?maxdepth ?minDepth ?temporalCoverage
 WHERE {
 		    ?subj ?o ?item .
 
@@ -49,32 +48,14 @@ values ?sosType {
             OPTIONAL {?subj schema:publisher/schema:name|sschema:publisher/sschema:name|schema:publisher/schema:legalName|sschema:publisher/sschema:legalName  ?pub_name .}
             OPTIONAL {?subj schema:spatialCoverage/schema:name|sschema:spatialCoverage/sschema:name|sschema:sdPublisher ?place_name .}
            # OPTIONAL {?subj schema:spatialCoverage/schema:geo/schema:latitude|sschema:spatialCoverage/sschema:geo/sschema:latitude ?lat .}
-           # OPTIONAL {?subj sschema:spatialCoverage/sschema:geo ?geo .
-			#         ?geo a sschema:GeoCoordinates .
-			#		 ?geo sschema:longitude ?lon .
-			#		 ?geo sschema:llatitude ?lat .}
-
-			#OPTIONAL {?subj sschema:spatialCoverage/sschema:geo ?geo .
-			#         ?geo a sschema:GeoShape .
-			#		 ?geo sschema:box ?box .}
-            #     bind ( COALESCE(?box) As ?bbox)
-				 OPTIONAL {?subj schema:keywords|sschema:keywords ?kw1 .}
-            OPTIONAL {
-                ?subj schema:variableMeasured ?vm .
-                ?vm a schema:PropertyValue .
-                ?vm schema:name ?variableMeasured_a .
-            }
-                 # if there is more than one location, then coallese to get the versions.
+                # OPTIONAL {?subj schema:spatialCoverage/schema:geo/schema:longitude|sschema:spatialCoverage/sschema:geo/sschema:longitude ?lon .}
+                 OPTIONAL {?subj schema:keywords|sschema:keywords ?kw1 .}
              OPTIONAL {?subj schema:variableMeasured ?vm .
                ?vm a  schema:PropertyValue  .
-               ?vm schema:name ?namedepth  .
-               FILTER (?namedepth IN ("depth", "CmpDep") ) .
-                    ?vm schema:maxValue ?maxdepth_d .
-                  ?vm schema:minValue ?minDepth_d
+               ?vm schema:name "depth" .
+                    ?vm schema:maxValue ?maxdepth .
+                  ?vm schema:minValue ?minDepth
            }
-             bind ( COALESCE(?maxdepth_d) As ?maxdepth)
-            bind ( COALESCE(?minDepth_d) As ?minDepth)
-
              # temporal coverage.
              bind ( COALESCE(?kw1, "") As ?kwu)
             bind ( COALESCE(?url1, "") As ?url)
@@ -83,6 +64,9 @@ values ?sosType {
             BIND ( IF ( BOUND(?pub_name), ?pub_name, "No Publisher") as ?pubname ) .
             BIND ( IF ( BOUND(?place_name), ?place_name, "No Placenames") as ?placename ) .
         }
-        GROUP BY ?subj ?pubname ?placename  ?datep ?url  ?name ?description ?type ?maxdepth ?minDepth ?temporalCoverage ?bbox ?g
+        GROUP BY ?subj ?pubname ?placename  ?datep ?url  ?name ?description ?type ?maxdepth ?minDepth ?temporalCoverage ?g
         ORDER BY DESC(?score)
 LIMIT 1000
+    #LIMIT 100
+#OFFSET 0
+

@@ -1,7 +1,9 @@
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix schema: <http://schema.org/>
 prefix sschema: <https://schema.org/>
-PREFIX ql: <http://qlever.cs.uni-freiburg.de/builtin-functions/>
+
+# this runs in about 15-20 seconds, vs 4 for the non-spaital version
+
 SELECT distinct ?subj ?pubname (GROUP_CONCAT(DISTINCT ?placename; SEPARATOR=", ") AS ?placenames)
         (GROUP_CONCAT(DISTINCT ?kwu; SEPARATOR=", ") AS ?kw)
         ?datep  (GROUP_CONCAT(DISTINCT ?url; SEPARATOR=", ") AS ?disurl)
@@ -49,15 +51,15 @@ values ?sosType {
             OPTIONAL {?subj schema:publisher/schema:name|sschema:publisher/sschema:name|schema:publisher/schema:legalName|sschema:publisher/sschema:legalName  ?pub_name .}
             OPTIONAL {?subj schema:spatialCoverage/schema:name|sschema:spatialCoverage/sschema:name|sschema:sdPublisher ?place_name .}
            # OPTIONAL {?subj schema:spatialCoverage/schema:geo/schema:latitude|sschema:spatialCoverage/sschema:geo/sschema:latitude ?lat .}
-           # OPTIONAL {?subj sschema:spatialCoverage/sschema:geo ?geo .
-			#         ?geo a sschema:GeoCoordinates .
-			#		 ?geo sschema:longitude ?lon .
-			#		 ?geo sschema:llatitude ?lat .}
+            OPTIONAL {?subj sschema:spatialCoverage/sschema:geo ?geo .
+			         ?geo a sschema:GeoCoordinates .
+					 ?geo sschema:longitude ?lon .
+					 ?geo sschema:llatitude ?lat .}
 
-			#OPTIONAL {?subj sschema:spatialCoverage/sschema:geo ?geo .
-			#         ?geo a sschema:GeoShape .
-			#		 ?geo sschema:box ?box .}
-            #     bind ( COALESCE(?box) As ?bbox)
+			OPTIONAL {?subj sschema:spatialCoverage/sschema:geo ?geo .
+			         ?geo a sschema:GeoShape .
+					 ?geo sschema:box ?box .}
+                 bind ( COALESCE(?box) As ?bbox)
 				 OPTIONAL {?subj schema:keywords|sschema:keywords ?kw1 .}
             OPTIONAL {
                 ?subj schema:variableMeasured ?vm .
@@ -67,8 +69,7 @@ values ?sosType {
                  # if there is more than one location, then coallese to get the versions.
              OPTIONAL {?subj schema:variableMeasured ?vm .
                ?vm a  schema:PropertyValue  .
-               ?vm schema:name ?namedepth  .
-               FILTER (?namedepth IN ("depth", "CmpDep") ) .
+               ?vm schema:name "depth" .
                     ?vm schema:maxValue ?maxdepth_d .
                   ?vm schema:minValue ?minDepth_d
            }
