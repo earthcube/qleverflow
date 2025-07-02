@@ -52,7 +52,7 @@ values ?sosType {
            # OPTIONAL {?subj sschema:spatialCoverage/sschema:geo ?geo .
 			#         ?geo a sschema:GeoCoordinates .
 			#		 ?geo sschema:longitude ?lon .
-			#		 ?geo sschema:llatitude ?lat .}
+			#		 ?geo sschema:latitude ?lat .}
 
 			#OPTIONAL {?subj sschema:spatialCoverage/sschema:geo ?geo .
 			#         ?geo a sschema:GeoShape .
