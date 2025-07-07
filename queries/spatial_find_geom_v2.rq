@@ -4,15 +4,14 @@ PREFIX sf: <http://www.opengis.net/ont/sf#>
 PREFIX uom: <http://www.opengis.net/def/uom/OGC/1.0/>
 PREFIX schema: <https://schema.org/>
 
-
 SELECT *
 WHERE {
      ?s a schema:Dataset .
     ?s schema:spatialCoverage ?spatialcoverage .
-    ?spatialcoverage schema:geo ?geo .
-    ?geo geo:hasGeometry ?geometry .
+    ?spatialcoverage schema:geo ?geom .
+    ?geom geo:hasGeometry ?geometry .
     ?geometry a sf:Point .
-  ?geom geo:asWKT ?wkt .
+   ?geometry geo:asWKT ?wkt .
 
 }
 limit 1000
