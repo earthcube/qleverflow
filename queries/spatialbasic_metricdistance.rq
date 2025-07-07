@@ -7,7 +7,6 @@ SELECT ?feature ?wkt
 WHERE {
   ?feature geo:hasGeometry ?geom .
   ?geom geo:asWKT ?wkt .
-  FILTER(geof:distance(?wkt, "POINT(125.726 28.5262)"^^geo:wktLiteral, "http://qudt.org/vocab/unit/M"^^xsd:anyURI) > 1)
+  FILTER(geof:metricDistance( "POINT(125.726 28.5262)"^^geo:wktLiteral, ?wkt)> 1)
 }
 limit 10
-
