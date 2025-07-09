@@ -6,5 +6,4 @@ SELECT *
 WHERE {
   ?geom geo:asWKT ?wkt .
 }
-limit 1000
-
+limit 10
