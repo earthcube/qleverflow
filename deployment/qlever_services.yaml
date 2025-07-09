@@ -30,7 +30,7 @@ configs:
 services:
 # PROJECT MUST BE A DNS COMPLAINT NAME. NO UNDER_SCORES
  qlever-server-base:
-    image: docker.io/adfreiburg/qlever:latest
+    image: docker.io/adfreiburg/qlever:${QLEVER_TAG:-latest}
     hostname: qlever-server-${PROJECT:-geocodesexamples}
     user: "root:root"  # Will be set via .env file
     #user: "1011:1011"
