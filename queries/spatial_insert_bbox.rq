@@ -1,13 +1,14 @@
 PREFIX schema: <https://schema.org/>
+PREFIX schema: <https://schema.org/>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 PREFIX geof: <http://www.opengis.net/def/function/geosparql#>
-
+PREFIX sf: <http://www.opengis.net/ont/sf#>
 INSERT {
-  ?geo geo:hasGeometry [
-    a geo:Geometry ;
-    geo:asWKT ?wktPolygon
-  ] .
+   ?geo geo:hasGeometry ?geometry .
+    ?geometry a sf:Polygon .
+    ?geometry geo:asWKT ?wktBbox
+   .
 }
 WHERE {
   ?s a schema:Dataset .
@@ -36,17 +37,19 @@ WHERE {
 
   # Fourth value: after second comma, remove leading whitespace
   BIND(REPLACE(STRAFTER(?afterFirstSpace, ","), "^\\s+", "") AS ?y2_str)
-
+BIND(IRI(CONCAT(STR(?geo), "/geometry")) AS ?geometry)
   # Rectangle WKT: (x1 y1, x2 y1, x2 y2, x1 y2, x1 y1)
   BIND(
-    CONCAT(
+    STRDT(
+	CONCAT(
       "POLYGON((",
       ?x1_str, " ", ?y1_str, ", ",
       ?x2_str, " ", ?y1_str, ", ",
       ?x2_str, " ", ?y2_str, ", ",
       ?x1_str, " ", ?y2_str, ", ",
       ?x1_str, " ", ?y1_str, "))"
-    ) AS ?wktBbox
+    ), geo:wktLiteral
+	) AS ?wktBbox
   )
 }
 
