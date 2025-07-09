@@ -30,7 +30,7 @@ configs:
 services:
 # PROJECT MUST BE A DNS COMPLAINT NAME. NO UNDER_SCORES
  qlever-server-base:
-    image: docker.io/adfreiburg/qlever:latest
+    image: docker.io/adfreiburg/qlever:${QLEVER_TAG:-latest}
     hostname: qlever-server-${PROJECT:-geocodesexamples}
     user: "root:root"  # Will be set via .env file
     #user: "1011:1011"
@@ -153,7 +153,7 @@ services:
  qlever-ui-config:
     image: docker.io/adfreiburg/qlever-ui:latest
     depends_on:
-      - qlever-server-project
+      - qlever-server-base
     volumes: *uivol
 
     configs:

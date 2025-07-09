@@ -1,3 +1,5 @@
+PREFIX textSearch: <https://qlever.cs.uni-freiburg.de/textSearch/>
+
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix schema: <http://schema.org/>
 prefix sschema: <https://schema.org/>
@@ -5,15 +7,18 @@ PREFIX ql: <http://qlever.cs.uni-freiburg.de/builtin-functions/>
 SELECT distinct ?subj ?pubname (GROUP_CONCAT(DISTINCT ?placename; SEPARATOR=", ") AS ?placenames)
         (GROUP_CONCAT(DISTINCT ?kwu; SEPARATOR=", ") AS ?kw)
         ?datep  (GROUP_CONCAT(DISTINCT ?url; SEPARATOR=", ") AS ?disurl)
-		(COUNT(?text) AS ?score) (SAMPLE(?text) AS ?example_text)
+		(COUNT(?t) AS ?score) (SAMPLE(?text) AS ?example_text)
         ?name ?description (GROUP_CONCAT(DISTINCT ?resourceType_u; SEPARATOR=", ") as ?resourceType )  ?type ?g   (MAX(?lat) as ?maxlat) (Min(?lat) as ?minlat) (MAX(?lon) as ?maxlon) (Min(?lon) as ?minlon)
  ?maxdepth ?minDepth ?temporalCoverage (GROUP_CONCAT(DISTINCT ?variableMeasured_a; SEPARATOR=", ") as ?variableMeasured  )
  ?bbox
 WHERE {
 		    ?subj ?o ?item .
 
-    ?text ql:contains-entity ?item .
-    ?text ql:contains-word "water"
+
+  		SERVICE textSearch: {
+		?t textSearch:contains [textSearch:word "water*" ; textSearch:prefix-match ?prefix_match ; textSearch:score ?prefix_score] .
+		?t textSearch:contains [textSearch:entity ?item  ; textSearch:score ?entity_score] .
+	}
           graph ?g {
 values ?sosType {
                sschema:Dataset
@@ -52,7 +57,7 @@ values ?sosType {
            # OPTIONAL {?subj sschema:spatialCoverage/sschema:geo ?geo .
 			#         ?geo a sschema:GeoCoordinates .
 			#		 ?geo sschema:longitude ?lon .
-			#		 ?geo sschema:latitude ?lat .}
+			#		 ?geo sschema:llatitude ?lat .}
 
 			#OPTIONAL {?subj sschema:spatialCoverage/sschema:geo ?geo .
 			#         ?geo a sschema:GeoShape .
@@ -87,3 +92,4 @@ values ?sosType {
         GROUP BY ?subj ?pubname ?placename  ?datep ?url  ?name ?description ?type ?maxdepth ?minDepth ?temporalCoverage ?bbox ?g
         ORDER BY DESC(?score)
 LIMIT 1000
+
