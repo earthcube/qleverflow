@@ -65,7 +65,7 @@ values ?sosType {
                 ?vm sschema:name ?variableMeasured_a .
             }
                  # if there is more than one location, then coallese to get the versions.
-             OPTIONAL {?subj schema:variableMeasured ?vm .
+             OPTIONAL {?subj sschema:variableMeasured ?vm .
                ?vm a  sschema:PropertyValue  .
                ?vm sschema:name "depth" .
                     ?vm sschema:maxValue ?maxdepth_d .
