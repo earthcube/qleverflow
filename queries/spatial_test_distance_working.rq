@@ -7,5 +7,5 @@ SELECT * {
   BIND (DATATYPE("POINT(125.726 28.5262)"^^geo:wktLiteral) as ?dtpoint)
   BIND (DATATYPE(STRDT("POINT(125.726 28.5262)",geo:wktLiteral)) as ?dtpoint2)
   BIND (geof:distance( "POINT(125.726 28.5262)"^^geo:wktLiteral, "POINT(125.726 28.5262)"^^geo:wktLiteral) as ?distance )
-  BIND (geof:distance( STRDT("POINT(125.726 28.5262)",geo:wktLiteral),?dtpoint ) as ?distance_strdt )
+  BIND (geof:distance( STRDT("POINT(125.726 28.5262)",geo:wktLiteral),"POINT(125.726 28.5262)"^^geo:wktLiteral ) as ?distance_strdt )
 }
