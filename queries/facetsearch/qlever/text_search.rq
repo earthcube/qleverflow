@@ -86,4 +86,4 @@ values ?sosType {
         }
         GROUP BY ?subj ?pubname ?placename  ?datep ?url  ?name ?description ?type ?maxdepth ?minDepth ?temporalCoverage ?bbox ?g
         ORDER BY DESC(?score)
-LIMIT 1000
+LIMIT 100
