@@ -5,6 +5,7 @@
 # qlever start     # starts the server (instant)
 # removed from ui section: UI_CONFIG = eco
 
+# THIS IS FOR A SINGLE SOURCE. See dev-multifile for an example of mulitple sources
 [data]
 NAME              = cchdo
 BASE_URL          = https://oss.geocodes-aws-dev.earthcube.org/geocodes/graphs/latest
