@@ -24,6 +24,9 @@ configs:
 services:
 # PROJECT MUST BE A DNS COMPLAINT NAME. NO UNDER_SCORES
  qlever-server-base:
+   # prevent continuous restarting... it may restart due to a crash
+   # withouth this a data load will run and pull data (and create a big bill)
+    restart: on-failure:3
     image: docker.io/adfreiburg/qlever:latest
     hostname: qlever-server-${PROJECT:-geocodesexamples}
     user: "root:root"  # Will be set via .env file
