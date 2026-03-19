@@ -15,18 +15,50 @@ volumes:
   qleverflow_data:
     name: qleverflow_data_${PROJECT:-geocodesexamples}
     #name: qlever
-
+  release_data:
+    name: release_data
 configs:
   qlever_config:
     name: qlever-config-${QLEVER_CONFIG:-geocodesexamples}
     #file: /Users/valentin/development/dev_earthcube/qleverflow/catalogues/data-geocodesexamples/Qleverfile.geocodesexamples
     external: true
 services:
+ qlever-sync-data:
+    # prevent continuous restarting... it may restart due to a crash
+    # without this a data load will run and pull data (and create a big bill)
+    restart: on-failure:3
+    image: docker.io/rclone/rclone:master
+    hostname: qlever-sync-${PROJECT:-geocodesexamples}
+    user: "root:root"  # Will be set via .env file
+    #user: "1011:1011"
+    working_dir: /release
+    environment:
+      # rclone remote config via env vars (remote name: S3REMOTE)
+      - RCLONE_CONFIG_S3REMOTE_TYPE=s3
+      - RCLONE_CONFIG_S3REMOTE_PROVIDER=${S3_PROVIDER:-Minio}
+      - RCLONE_CONFIG_S3REMOTE_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID}
+      - RCLONE_CONFIG_S3REMOTE_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY}
+      - RCLONE_CONFIG_S3REMOTE_ENDPOINT=${S3_ENDPOINT:-minio:9000}
+      - RCLONE_CONFIG_S3REMOTE_REGION=${S3_REGION:-eu-central-1}
+      # source path: S3_BUCKET/S3_PATH  →  /data
+      - S3_BUCKET=${S3_BUCKET:-decoder}
+      - S3_PATH=${S3_PATH:-graphs/latest}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      # - /home/fils/scratch/qleverflow/configs/marineregions:/data
+      - type: volume
+        source: release_data
+        target: /release
+    entrypoint: /bin/sh
+    command: >
+      -c "rclone sync S3REMOTE:$$S3_BUCKET/$$S3_PATH /release --progress"
 # PROJECT MUST BE A DNS COMPLAINT NAME. NO UNDER_SCORES
  qlever-server-base:
    # prevent continuous restarting... it may restart due to a crash
    # withouth this a data load will run and pull data (and create a big bill)
     restart: on-failure:3
+    depends_on:
+      - qlever-sync-data
     image: docker.io/adfreiburg/qlever:latest
     hostname: qlever-server-${PROJECT:-geocodesexamples}
     user: "root:root"  # Will be set via .env file
@@ -46,18 +78,16 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
      # - /home/fils/scratch/qleverflow/configs/marineregions:/data
-      # - type: volume
-      #   source: qleverflow_data
-      #   target: /data
-      #   o: uid=1000,gid=1000
-      #- qleverflow_data:/data
+      - type: volume
+        source: release_data
+        target: /release
 
     configs:
       - source: qlever_config
         target: /data/Qleverfile
     entrypoint: /qlever/docker-entrypoint.sh
     command: >
-               ' ls -l && qlever get-data  --log-level DEBUG && qlever index  && qlever start --run-in-foreground '
+               ' ls -l /release && qlever index --text-index from_text_records_and_literals && qlever start --use-text-index --run-in-foreground '
 
     # run in forground, otherwise docker thinks run is complete.
     # 'qlever setup-config ${PROJECT:-geocodesexamples} && qlever get-data && qlever index &&  qlever start'
