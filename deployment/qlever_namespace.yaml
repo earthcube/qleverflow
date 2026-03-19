@@ -14,6 +14,7 @@ volumes:
     name: qleverflow_data_${QLEVER_VOL:-main}
   release_data:
     name: release_data
+    external: true
 configs:
   qlever-config:
     name: qlever-config-${QLEVER_CONFIG:-deepoceans}

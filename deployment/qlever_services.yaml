@@ -17,6 +17,7 @@ volumes:
     #name: qlever
   release_data:
     name: release_data
+    external: true
 configs:
   qlever_config:
     name: qlever-config-${QLEVER_CONFIG:-geocodesexamples}
