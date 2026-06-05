@@ -73,6 +73,8 @@ services:
       - "traefik.http.routers.qlever-project-${PROJECT:-deepoceans}-secure.service=qlever-project-${PROJECT:-deepoceans}"
       - "traefik.http.services.qlever-project-${PROJECT:-deepoceans}.loadbalancer.server.port=7019"
       - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.middlewares.qlever-stripprefix-${PROJECT:-deepoceans}.stripprefix.prefixes=/graphspace/${PROJECT:-deepoceans}"
+      - "traefik.http.routers.qlever-project-${PROJECT:-deepoceans}-secure.middlewares=qlever-stripprefix-${PROJECT:-deepoceans}"
 
  qlever-ui-config-namespace:
     image: docker.io/adfreiburg/qlever-ui:latest

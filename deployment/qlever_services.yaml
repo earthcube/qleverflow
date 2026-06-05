@@ -13,14 +13,14 @@ networks:
 #export GROUP_ID=$(id -g)
 volumes:
   qleverflow_data:
-    name: qleverflow_data_${PROJECT:-geocodesexamples}
+    name: qleverflow_data_${PROJECT:-services}
     #name: qlever
   release_data:
     name: release_data
     external: true
 configs:
   qlever_config:
-    name: qlever-config-${QLEVER_CONFIG:-geocodesexamples}
+    name: qlever-config-${QLEVER_CONFIG:-services}
     #file: /Users/valentin/development/dev_earthcube/qleverflow/catalogues/data-geocodesexamples/Qleverfile.geocodesexamples
     external: true
 services:
@@ -29,7 +29,7 @@ services:
     # without this a data load will run and pull data (and create a big bill)
     restart: on-failure:3
     image: docker.io/rclone/rclone:master
-    hostname: qlever-sync-${PROJECT:-geocodesexamples}
+    hostname: qlever-sync-${PROJECT:-services}
     user: "root:root"  # Will be set via .env file
     #user: "1011:1011"
     working_dir: /release
@@ -52,69 +52,13 @@ services:
         target: /release
     entrypoint: /bin/sh
     command: >
-      -c "rclone sync S3REMOTE:$$S3_BUCKET/$$S3_PATH /release --progress"
-# PROJECT MUST BE A DNS COMPLAINT NAME. NO UNDER_SCORES
- qlever-server-base:
-   # prevent continuous restarting... it may restart due to a crash
-   # withouth this a data load will run and pull data (and create a big bill)
-    restart: on-failure:3
-    depends_on:
-      - qlever-sync-data
-    image: docker.io/adfreiburg/qlever:latest
-    hostname: qlever-server-${PROJECT:-geocodesexamples}
-    user: "root:root"  # Will be set via .env file
-    #user: "1011:1011"
-    working_dir: /data
-#    ports:
-#      - "7019:7019"
-    environment:
-      - PATH="/qlever:/qlever/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-      - LANG="C.UTF-8"
-      - LC_ALL="C.UTF-8"
-      - LC_CTYPE="C.UTF-8"
-      - DEBIAN_FRONTEND="noninteractive"
-      - QLEVER_PROFILE="/etc/profile.d/qlever.sh"
-      - QLEVER_ARGCOMPLETE_ENABLED="1"
-      - QLEVER_IS_RUNNING_IN_CONTAINER="1"
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-     # - /home/fils/scratch/qleverflow/configs/marineregions:/data
-      - type: volume
-        source: release_data
-        target: /release
+      -c "rclone sync $$S3REMOTE:$$S3_BUCKET/$$S3_PATH /release --progress"
 
-    configs:
-      - source: qlever_config
-        target: /data/Qleverfile
-    entrypoint: /qlever/docker-entrypoint.sh
-    command: >
-               ' ls -l /release && qlever index --text-index from_text_records_and_literals && qlever start --use-text-index --run-in-foreground '
-
-    # run in forground, otherwise docker thinks run is complete.
-    # 'qlever setup-config ${PROJECT:-geocodesexamples} && qlever get-data && qlever index &&  qlever start'
-    # -c 'ServerMain -i ${PROJECT:-geocodesexamples} -j 8 -p 7019 -m 25G -c 20G -e 1G -k 200 -s 240s'
-    #restart: unless-stopped
-    networks: &network
-      - qlever_network
-      - traefik_proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}.entrypoints=http"
-      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}.rule=Host(`qlever.${HOST}`) && PathPrefix(`/graphspace/${PROJECT}`)"
-      - "traefik.http.middlewares.qlever-base-${PROJECT:-geocodesexamples}-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}.middlewares=qlever-base-${PROJECT:-geocodesexamples}-https-redirect"
-      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}-secure.entrypoints=https"
-      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}-secure.rule=Host(`qlever.${HOST}`) && PathPrefix(`/graphspace/${PROJECT}`)"
-      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}-secure.tls=true"
-      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}-secure.tls.certresolver=httpresolver"
-      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}-secure.service=qlever-base-${PROJECT:-geocodesexamples}"
-      - "traefik.http.services.qlever-base-${PROJECT:-geocodesexamples}.loadbalancer.server.port=7019"
-      - "traefik.docker.network=traefik_proxy"
 
 
  qlever-ui-base:
     image: docker.io/adfreiburg/qlever-ui:latest
-    hostname: qlever-ui-${PROJECT:-geocodesexamples}
+    hostname: qlever-ui-${PROJECT:-services}
     #init: true
     volumes:
       - type: volume
@@ -142,19 +86,21 @@ services:
       - "10000"
       - "qlever.wsgi:application"
     #restart: unless-stopped
-    networks: *network
+    networks: &network
+      - qlever_network
+      - traefik_proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.qlever-ui-${PROJECT:-geocodesexamples}.entrypoints=http"
-      - "traefik.http.routers.qlever-ui-${PROJECT:-geocodesexamples}.rule=Host(`qlever-ui.${HOST}`)"
-      - "traefik.http.middlewares.qlever-ui-${PROJECT:-geocodesexamples}-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.qlever-ui-${PROJECT:-geocodesexamples}.middlewares=qlever-ui-${PROJECT:-geocodesexamples}-https-redirect"
-      - "traefik.http.routers.qlever-ui-${PROJECT:-geocodesexamples}-secure.entrypoints=https"
-      - "traefik.http.routers.qlever-ui-${PROJECT:-geocodesexamples}-secure.rule=Host(`qlever-ui.${HOST}`)"
-      - "traefik.http.routers.qlever-ui-${PROJECT:-geocodesexamples}-secure.tls=true"
-      - "traefik.http.routers.qlever-ui-${PROJECT:-geocodesexamples}-secure.tls.certresolver=httpresolver"
-      - "traefik.http.routers.qlever-ui-${PROJECT:-geocodesexamples}-secure.service=qlever-ui-${PROJECT:-geocodesexamples}"
-      - "traefik.http.services.qlever-ui-${PROJECT:-geocodesexamples}.loadbalancer.server.port=7000"
+      - "traefik.http.routers.qlever-ui-${PROJECT:-services}.entrypoints=http"
+      - "traefik.http.routers.qlever-ui-${PROJECT:-services}.rule=Host(`qlever-ui.${HOST}`)"
+      - "traefik.http.middlewares.qlever-ui-${PROJECT:-services}-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.qlever-ui-${PROJECT:-services}.middlewares=qlever-ui-${PROJECT:-services}-https-redirect"
+      - "traefik.http.routers.qlever-ui-${PROJECT:-services}-secure.entrypoints=https"
+      - "traefik.http.routers.qlever-ui-${PROJECT:-services}-secure.rule=Host(`qlever-ui.${HOST}`)"
+      - "traefik.http.routers.qlever-ui-${PROJECT:-services}-secure.tls=true"
+      - "traefik.http.routers.qlever-ui-${PROJECT:-services}-secure.tls.certresolver=httpresolver"
+      - "traefik.http.routers.qlever-ui-${PROJECT:-services}-secure.service=qlever-ui-${PROJECT:-services}"
+      - "traefik.http.services.qlever-ui-${PROJECT:-services}.loadbalancer.server.port=7000"
       - "traefik.docker.network=traefik_proxy"
 
  qlever-petrimaps-base:
@@ -165,14 +111,72 @@ services:
     networks: *network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-geocodesexamples}.entrypoints=http"
-      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-geocodesexamples}.rule=Host(`qlever-petrimaps.${HOST}`)"
-      - "traefik.http.middlewares.qlever-petrimaps-${PROJECT:-geocodesexamples}-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-geocodesexamples}.middlewares=qlever-petrimaps-${PROJECT:-geocodesexamples}-https-redirect"
-      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-geocodesexamples}-secure.entrypoints=https"
-      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-geocodesexamples}-secure.rule=Host(`qlever-petrimaps.${HOST}`)"
-      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-geocodesexamples}-secure.tls=true"
-      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-geocodesexamples}-secure.tls.certresolver=httpresolver"
-      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-geocodesexamples}-secure.service=qlever-petrimaps-${PROJECT:-geocodesexamples}"
-      - "traefik.http.services.qlever-petrimaps-${PROJECT:-geocodesexamples}.loadbalancer.server.port=9090"
+      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-services}.entrypoints=http"
+      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-services}.rule=Host(`qlever-petrimaps.${HOST}`)"
+      - "traefik.http.middlewares.qlever-petrimaps-${PROJECT:-services}-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-services}.middlewares=qlever-petrimaps-${PROJECT:-services}-https-redirect"
+      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-services}-secure.entrypoints=https"
+      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-services}-secure.rule=Host(`qlever-petrimaps.${HOST}`)"
+      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-services}-secure.tls=true"
+      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-services}-secure.tls.certresolver=httpresolver"
+      - "traefik.http.routers.qlever-petrimaps-${PROJECT:-services}-secure.service=qlever-petrimaps-${PROJECT:-services}"
+      - "traefik.http.services.qlever-petrimaps-${PROJECT:-services}.loadbalancer.server.port=9090"
       - "traefik.docker.network=traefik_proxy"
+
+# PROJECT MUST BE A DNS COMPLAINT NAME. NO UNDER_SCORES
+# qlever-server-base:
+#   # prevent continuous restarting... it may restart due to a crash
+#   # withouth this a data load will run and pull data (and create a big bill)
+#    restart: on-failure:3
+#    depends_on:
+#      - qlever-sync-data
+#    image: docker.io/adfreiburg/qlever:latest
+#    hostname: qlever-server-${PROJECT:-geocodesexamples}
+#    user: "root:root"  # Will be set via .env file
+#    #user: "1011:1011"
+#    working_dir: /data
+##    ports:
+##      - "7019:7019"
+#    environment:
+#      - PATH="/qlever:/qlever/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+#      - LANG="C.UTF-8"
+#      - LC_ALL="C.UTF-8"
+#      - LC_CTYPE="C.UTF-8"
+#      - DEBIAN_FRONTEND="noninteractive"
+#      - QLEVER_PROFILE="/etc/profile.d/qlever.sh"
+#      - QLEVER_ARGCOMPLETE_ENABLED="1"
+#      - QLEVER_IS_RUNNING_IN_CONTAINER="1"
+#    volumes:
+#      - /etc/localtime:/etc/localtime:ro
+#     # - /home/fils/scratch/qleverflow/configs/marineregions:/data
+#      - type: volume
+#        source: release_data
+#        target: /release
+#
+#    configs:
+#      - source: qlever_config
+#        target: /data/Qleverfile
+#    entrypoint: /qlever/docker-entrypoint.sh
+#    command: >
+#               ' ls -l /release && qlever index --text-index from_text_records_and_literals && qlever start --use-text-index --run-in-foreground '
+#
+#    # run in forground, otherwise docker thinks run is complete.
+#    # 'qlever setup-config ${PROJECT:-geocodesexamples} && qlever get-data && qlever index &&  qlever start'
+#    # -c 'ServerMain -i ${PROJECT:-geocodesexamples} -j 8 -p 7019 -m 25G -c 20G -e 1G -k 200 -s 240s'
+#    #restart: unless-stopped
+#    networks: &network
+#      - qlever_network
+#      - traefik_proxy
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}.entrypoints=http"
+#      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}.rule=Host(`qlever.${HOST}`) && PathPrefix(`/graphspace/${PROJECT}`)"
+#      - "traefik.http.middlewares.qlever-base-${PROJECT:-geocodesexamples}-https-redirect.redirectscheme.scheme=https"
+#      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}.middlewares=qlever-base-${PROJECT:-geocodesexamples}-https-redirect"
+#      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}-secure.entrypoints=https"
+#      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}-secure.rule=Host(`qlever.${HOST}`) && PathPrefix(`/graphspace/${PROJECT}`)"
+#      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}-secure.tls=true"
+#      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}-secure.tls.certresolver=httpresolver"
+#      - "traefik.http.routers.qlever-base-${PROJECT:-geocodesexamples}-secure.service=qlever-base-${PROJECT:-geocodesexamples}"
+#      - "traefik.http.services.qlever-base-${PROJECT:-geocodesexamples}.loadbalancer.server.port=7019"
+#      - "traefik.docker.network=traefik_proxy"
