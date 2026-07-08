@@ -5,19 +5,23 @@
 # qlever start     # starts the server (instant)
 # removed from ui section: UI_CONFIG = eco
 
-# THIS IS FOR A SINGLE SOURCE.
-# See dev-multifile for an example of mulitple sources
+[DEFAULT]
+NAME              = example and demo datasets
+SOURCES           = geocodes_examples geocodes_demo_datasets
+
 [data]
-NAME              = geocodesexamples
+
 BASE_URL          = https://oss.geocodes-aws-dev.earthcube.org/test/graphs/latest
-GET_DATA_CMD      = curl -sLo geocodes_examples_release.nq -C - ${BASE_URL}/geocodes_examples_release.nq
+#GET_DATA_CMD      = for source in ${SOURCES}; do curl -sLo $${source}_release.nq -C - ${BASE_URL}/$${source}_release.nq; done
 DESCRIPTION       = eco test ${BASE_URL}
 TEXT_DESCRIPTION  = eco release graph description
 FORMAT            = nq
 
 [index]
+SOURCES           = geocodes_examples geocodes_demo_datasets
 INPUT_FILES     = ../release/geocodes_examples_release.nq
-CAT_INPUT_FILES = cat ${INPUT_FILES}
+#CAT_INPUT_FILES = cat ${INPUT_FILES}
+CAT_INPUT_FILES = for s in ${SOURCES}; do cat "../release/$${s}_release.nq"; done
 VOCABULARY_TYPE = on-disk-compressed-geo-split
 SETTINGS_JSON   = { "add-text-index": true, "ascii-prefixes-only": false, "num-triples-per-batch": 100000 }
 #SETTINGS_JSON   = { "add-text-index": true, "ascii-prefixes-only": false, "num-triples-per-batch": 100000, "vocabulary-type": "on-disk-compressed-geo-split" }

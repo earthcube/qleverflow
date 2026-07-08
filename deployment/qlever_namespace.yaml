@@ -17,10 +17,10 @@ volumes:
     external: true
 configs:
   qlever-config:
-    name: qlever-config-${QLEVER_CONFIG:-deepoceans}
+    name: qlever-config-${QLEVER_CONFIG:-namespace}
     external: true
   qlever-ui:
-    name: qlever-ui-${QLEVER_CONFIG_UI:-deepoceans}
+    name: qlever-ui-${QLEVER_CONFIG_UI:-namespace}
     external: true
 services:
 
@@ -29,10 +29,10 @@ services:
    # withouth this a data load will run and pull data (and create a big bill)
     restart: on-failure:3
     image: docker.io/adfreiburg/qlever:${QLEVER_CONTAINER_TAG:-latest}
-    hostname: qlever.server.${PROJECT:-deepoceans}
+    hostname: qlever.server.${PROJECT:-namespace}
     init: true
-    user: "root:root"  # Will be set via .env file
-    #user: "1000:1000"  # Will be set via .env file
+    #user: "root:root"  # Will be set via .env file
+    user: "${CURRENT_UID}:${CURRENT_GID}"
     working_dir: /data
 #    ports:
 #      - "7019:7019"
@@ -62,35 +62,18 @@ services:
       - traefik_proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.qlever-project-${PROJECT:-deepoceans}.entrypoints=http"
-      - "traefik.http.routers.qlever-project-${PROJECT:-deepoceans}.rule=Host(`qlever.${HOST}`) && PathPrefix(`/graphspace/${PROJECT}`)"
-      - "traefik.http.middlewares.qlever-project-${PROJECT:-deepoceans}-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.qlever-project-${PROJECT:-deepoceans}.middlewares=qlever-project-${PROJECT:-deepoceans}-https-redirect"
-      - "traefik.http.routers.qlever-project-${PROJECT:-deepoceans}-secure.entrypoints=https"
-      - "traefik.http.routers.qlever-project-${PROJECT:-deepoceans}-secure.rule=Host(`qlever.${HOST}`) && PathPrefix(`/graphspace/${PROJECT}`)"
-      - "traefik.http.routers.qlever-project-${PROJECT:-deepoceans}-secure.tls=true"
-      - "traefik.http.routers.qlever-project-${PROJECT:-deepoceans}-secure.tls.certresolver=httpresolver"
-      - "traefik.http.routers.qlever-project-${PROJECT:-deepoceans}-secure.service=qlever-project-${PROJECT:-deepoceans}"
-      - "traefik.http.services.qlever-project-${PROJECT:-deepoceans}.loadbalancer.server.port=7019"
+      - "traefik.http.routers.qlever-project-${PROJECT:-namespace}.entrypoints=http"
+      - "traefik.http.routers.qlever-project-${PROJECT:-namespace}.rule=Host(`qlever.${HOST}`) && PathPrefix(`/graphspace/${PROJECT:-namespace}`)"
+      - "traefik.http.middlewares.qlever-project-${PROJECT:-namespace}-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.qlever-project-${PROJECT:-namespace}.middlewares=qlever-project-${PROJECT:-namespace}-https-redirect"
+      - "traefik.http.routers.qlever-project-${PROJECT:-namespace}-secure.entrypoints=https"
+      - "traefik.http.routers.qlever-project-${PROJECT:-namespace}-secure.rule=Host(`qlever.${HOST}`) && PathPrefix(`/graphspace/${PROJECT:-namespace}`)"
+      - "traefik.http.routers.qlever-project-${PROJECT:-namespace}-secure.tls=true"
+      - "traefik.http.routers.qlever-project-${PROJECT:-namespace}-secure.tls.certresolver=httpresolver"
+      - "traefik.http.routers.qlever-project-${PROJECT:-namespace}-secure.service=qlever-project-${PROJECT:-namespace}"
+      - "traefik.http.services.qlever-project-${PROJECT:-namespace}.loadbalancer.server.port=7019"
       - "traefik.docker.network=traefik_proxy"
-      - "traefik.http.middlewares.qlever-stripprefix-${PROJECT:-deepoceans}.stripprefix.prefixes=/graphspace/${PROJECT:-deepoceans}"
-      - "traefik.http.routers.qlever-project-${PROJECT:-deepoceans}-secure.middlewares=qlever-stripprefix-${PROJECT:-deepoceans}"
+      - "traefik.http.middlewares.qlever-stripprefix-${PROJECT:-namespace}.stripprefix.prefixes=/graphspace/${PROJECT:-namespace}"
+      - "traefik.http.routers.qlever-project-${PROJECT:-namespace}-secure.middlewares=qlever-stripprefix-${PROJECT:-namespace}"
 
- qlever-ui-config-namespace:
-    image: docker.io/adfreiburg/qlever-ui:latest
-    depends_on:
-      - qlever-server-project
-    volumes:
-      - type: volume
-        source: qleverflow_data
-        target: /app/db/
-    configs:
-      - source: qlever-ui
-        target: /app/Qleverfile-ui-deploy.yml
-    # ports:
-    #   - "8176:7000"
-   #    entrypoint: bash
-    command: bash -c "python manage.py copy default ${PROJECT:-geocodesexamples} && python manage.py config ${PROJECT:-geocodesexamples} /app/Qleverfile-ui-deploy.yml"
 
-    restart: on-failure:1
-    networks: *network

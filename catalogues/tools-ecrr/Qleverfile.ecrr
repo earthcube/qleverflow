@@ -4,21 +4,23 @@
 # qlever index     # takes ~10 seconds and ~1 GB RAM (on an AMD Ryzen 9 5900X)
 # qlever start     # starts the server (instant)
 # removed from ui section: UI_CONFIG = eco
-
-[data]
+[DEFAULT]
 NAME              = ecrr
 SOURCES           = ecrr_examples ecrr_submitted
+
+[data]
 BASE_URL          = https://oss.geocodes-aws-dev.earthcube.org/ecrr/graphs/latest
-GET_DATA_CMD      = for source in ${SOURCES}; do curl -sLo $${source}_release.nq -C - ${BASE_URL}/$${source}_release.nq; done
+#GET_DATA_CMD      = for source in ${SOURCES}; do curl -sLo $${source}_release.nq -C - ${BASE_URL}/$${source}_release.nq; done
 DESCRIPTION       = eco ${NAME} ${BASE_URL}
 TEXT_DESCRIPTION  = eco release graph for ${NAME} sources: ${SOURCES}
 FORMAT            = nq
 
 
 [index]
-INPUT_FILES     = *_release.nq
-CAT_INPUT_FILES = cat ${INPUT_FILES}
-SETTINGS_JSON   = { "add-text-index": true, "ascii-prefixes-only": false, "num-triples-per-batch": 100000 }
+INPUT_FILES       = ../release/*_release.nq
+#CAT_INPUT_FILES = cat ${INPUT_FILES}
+CAT_INPUT_FILES   = for s in ${SOURCES}; do cat "../release/$${s}_release.nq"; done
+SETTINGS_JSON     = { "add-text-index": true, "ascii-prefixes-only": false, "num-triples-per-batch": 100000 }
 
 [server]
 PORT               = 7019

@@ -9,10 +9,11 @@
 [data]
 NAME              = cchdo
 BASE_URL          = https://oss.geocodes-aws-dev.earthcube.org/geocodes/graphs/latest
-GET_DATA_CMD      = curl -sLo cchdo_release.nq -C - ${BASE_URL}/cchdo_release.nq
+#GET_DATA_CMD      = curl -sLo cchdo_release.nq -C - ${BASE_URL}/cchdo_release.nq
 DESCRIPTION       = eco test ${BASE_URL}
 TEXT_DESCRIPTION  = eco release graph description
 FORMAT            = nq
+
 
 [index]
 INPUT_FILES     = ../release/cchdo_release.nq

@@ -30,7 +30,7 @@ services:
     restart: on-failure:3
     image: docker.io/rclone/rclone:master
     hostname: qlever-sync-${PROJECT:-services}
-    user: "root:root"  # Will be set via .env file
+    user: "${CURRENT_UID}:${CURRENT_GID}"
     #user: "1011:1011"
     working_dir: /release
     environment:
@@ -54,40 +54,46 @@ services:
     command: >
       -c "rclone sync $$S3REMOTE:$$S3_BUCKET/$$S3_PATH /release --progress"
 
-
-
  qlever-ui-base:
-    image: docker.io/adfreiburg/qlever-ui:latest
+    image: ghcr.io/earthcube/qlever-ui-new:org-decoderv2
+    #ghcr.io/qlever-dev/qlever-ui-new:edge
     hostname: qlever-ui-${PROJECT:-services}
+    user: "${CURRENT_UID}:${CURRENT_GID}"
     #init: true
     volumes:
       - type: volume
         source: qleverflow_data
-        target: /app/db/
+        target: /app/data
     #   - qleverflow_data:/app/db
     # ports:
     #   - "8176:7000"
     environment:
       # this will hopefully be a hostname from the above service
-      QLEVER_HOST: "http://qlever-server-${PROJECT:-geocodesexamples}:7007"
+      QLEVER_HOST: "http://qlever-server-${PROJECT:-services}:7007"
       QLEVERUI_ALLOWED_HOSTS: "*"
       QLEVERUI_CSRF_TRUSTED_ORIGINS: ${QLEVERUI_CSRF_TRUSTED_ORIGINS:-https://*.geocodes-aws-dev.earthcube.org}
       QLEVERUI_SECRET_KEY: ${QLEVERUI_SECRET_KEY:-!!super_secret!!}
       QLEVERUI_DATABASE_URL: "sqlite:////app/db/qleverui.sqlite3"
+      CORS_ORIGINS: ${QLEVERUI_CORS_ORIGINS:-https://*.geocodes-aws-dev.earthcube.org}
+      CONFIG_FILE: ${QLEVERUI_CONFIG_FILE:-config.yaml}
+      EXAMPLES_DIR: ${QLEVERUI_EXAMPLES_DIR:-examples}
+      DB_FILE: ${QLEVERUI_DB_FILE:-data/data.db}
 #      QLEVER_HOST: "http://0.0.0.0:7007"
    #    entrypoint: bash
-    command:
-      - gunicorn
-      - "--bind"
-      - ":7000"
-      - "--workers"
-      - "3"
-      - "--limit-request-line"
-      - "10000"
-      - "qlever.wsgi:application"
+    # command:
+    #   - gunicorn
+    #   - "--bind"
+    #   - ":7000"
+    #   - "--workers"
+    #   - "3"
+    #   - "--limit-request-line"
+    #   - "10000"
+    #   - "qlever.wsgi:application"
     #restart: unless-stopped
+#    configs:
+#         - source: qlever_ui_config
+#           target: /app/config.yaml
     networks: &network
-      - qlever_network
       - traefik_proxy
     labels:
       - "traefik.enable=true"
@@ -103,12 +109,16 @@ services:
       - "traefik.http.services.qlever-ui-${PROJECT:-services}.loadbalancer.server.port=7000"
       - "traefik.docker.network=traefik_proxy"
 
+
+
  qlever-petrimaps-base:
     image: docker.io/adfreiburg/qlever-petrimaps:latest
     hostname: qlever-petrimaps
     # ports:
     #   - "9090:9090"
-    networks: *network
+    networks: &network
+      - qlever_network
+      - traefik_proxy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.qlever-petrimaps-${PROJECT:-services}.entrypoints=http"
